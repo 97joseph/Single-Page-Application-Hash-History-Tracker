@@ -1,0 +1,97 @@
+<html>
+    <head>
+        <script>
+            var array = []; //global array variable, has to be global so all inner functions can use it
+            var click = false;
+            var last = 0;
+
+            function load() { //this function runs on load of the body element in HTML, if we dont do this, the javascript will run before the elements in the body exist
+                document.getElementById("#one").addEventListener("click", arrayAdd); //these lines tell javascript to listen for events that happen on a specific element by id
+                document.getElementById("#two").addEventListener("click", arrayAdd);
+                document.getElementById("#three").addEventListener("click", arrayAdd);
+                document.getElementById("#four").addEventListener("click", arrayAdd);
+                document.getElementById("#five").addEventListener("click", arrayAdd);
+                document.getElementById("#six").addEventListener("click", arrayAdd);
+                document.getElementById("#arrayRead").addEventListener("click", arrayRead); //this is different from the others as it reads back the array elements
+                document.getElementById("#arrayReverse").addEventListener("click", arrayReverse); //reverses the array elements
+            }
+
+            function arrayAdd(IUC) { //IUC stands for "Item User Clicked"
+                IUC.preventDefault();//this prevents the browser from using our hash without the array position identifier
+                var theID = IUC.target.id; //so for the item user clicked - get the target of that click and tell us the id of that element (the id of the a element from the body)
+                while( last<array.length-1 ) { //this allows us to detect that a user is navigating after using the back button
+                    array.pop(); //we need to pop off any forward history that the user has navigated away from, otherwise our log contains entries that they can never access
+                }
+                array.push(theID+"&"+array.length); //now we push the id of the page to the array
+                window.location.hash=theID+"&"+array.length; //we now force the hash update to the browser with the array position identifier
+                click = true; //register that a click has been made by the user
+                last = array.length; //set the last item that the user accessed to the array.length
+                //now we store the data to the session so a user can refresh and keep their history
+                sessionStorage.setItem("array", JSON.stringify(array));
+                sessionStorage.setItem("last", last);
+            }
+
+            function arrayRead() { //IUC stands for "Item User Clicked"
+                var num = 0; //declare a number as 0
+                array.forEach(function(element) { //for each item in the array declared at the top using = [] 
+                    num+=1 //add 1 to the number variable
+                    alert("item number" + num + " is " + element); //alert this information to the user, the element is what is stored in the array
+                }, this);
+            }
+
+            function arrayReverse() {
+                array.reverse(); //reverse the array
+            }
+
+            window.onhashchange = function() { //detects if the hash in the window.location in the browser address bar has changed
+                if( click==true ) { //detect if the user has clicked on of our event button to cause this hash change
+                    click=false; //if they did, set it back the click variable back to false and do not continue;
+                } else { //if they didnt click one of our event buttons this means they navigated via their browser to cause the has change
+                    var hashSplit = window.location.hash.split('&'); //here we split the window location hash by the lazy and
+                    var pageId = hashSplit[0].replace('#',''); //now we remove the hash so we are left with the page id
+                    var arrayPosition = parseInt(hashSplit[1]); //the remaining element from the split is the array position we are now in, make sure it is a number not a string for the next calculations to work
+                    if(last>arrayPosition) {
+                        alert("You navigated back!");
+                    } else if(last<arrayPosition) {
+                        alert("You navigated forward!");
+                    } else {
+                        alert("You refreshed the page!");
+                    }
+                    last = arrayPosition;
+                    //we need to update the session storage here, not the array data though
+                    sessionStorage.setItem("last", last);
+                }
+            }
+
+            //these next two functions recall the stored session data so if a user refreshes it doesn't break our stored history
+            if (sessionStorage.getItem("array")) {
+                array = JSON.parse(sessionStorage.getItem("array"));
+            };
+
+            if (sessionStorage.getItem("last")) {
+                last = sessionStorage.getItem("last");
+            };
+            
+
+        </script>
+
+        <style>
+            a { float:left;
+                clear:both;
+                width:100%;
+                margin:10px; }
+        </style>
+
+    </head>
+
+    <body onload="load()"> 
+        <a id="#one" href="#one">one</a>
+        <a id="#two" href="#two">two</a>
+        <a id="#three" href="#three">three</a>
+        <a id="#four" href="#four">four</a>
+        <a id="#five" href="#five">five</a>
+        <a id="#six" href="#six">six</a>
+        <a id="#arrayRead" href="#arrayRead">array read</a>
+        <a id="#arrayReverse" href="#arrayReverse">array reverse</a>
+    </body>
+</html>
